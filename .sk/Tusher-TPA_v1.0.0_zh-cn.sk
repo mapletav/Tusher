@@ -1,0 +1,223 @@
+#=======================================================================================================#
+#   _____                 _                             _____   ____       _                    _       #
+#  |_   _|  _   _   ___  | |__     ___   _ __          |_   _| |  _ \     / \             ___  | | __   #
+#    | |   | | | | / __| | '_ \   / _ \ | '__|  _____    | |   | |_) |   / _ \           / __| | |/ /   #
+#    | |   | |_| | \__ \ | | | | |  __/ | |    |_____|   | |   |  __/   / ___ \     _    \__ \ |   <    #
+#    |_|    \__,_| |___/ |_| |_|  \___| |_|              |_|   |_|     /_/   \_\   (_)   |___/ |_|\_\   #
+#                                                                                                       #
+#=======================================================================================================#
+# Tusher-TPA base on Skript by Mapletav
+# 
+# 版本号：1.0.0-240809
+# 开发环境版本：Minecraft-1.20.1、Skript-2.9.1 (https://github.com/SkriptLang/Skript/releases/tag/2.9.1)
+
+on load:
+    delete {tpa::*}
+    delete {tpahere::*}
+    delete {tpStatus::*}
+    delete {tpOperationStatus::*}
+    delete {tping::*}
+
+options:
+    prefix: &3&l系统 &8»&r
+    discriminator-info-1-tpa: &6&l你的指令有误，请输入 &f&l/tpa 玩家名称 &6&l重试！
+    discriminator-info-1-tpahere: &6&l你的指令有误，请输入 &f&l/tpahere 玩家名称 &6&l重试！
+    discriminator-info-1-tpaccept: &6&l你的指令有误，请输入 &b&l/tpaccept 玩家名称 &6&l重试！
+    discriminator-info-1-tpdeny: &6&l你的指令有误，请输入 &b&l/tpdeny 玩家名称 &6&l重试！
+    discriminator-info-2: &6&l你不能对自己使用该指令！
+    discriminator-info-3: &6&l对方已设置为禁止传送状态！
+    discriminator-info-4: &6&l你已经向对方发送了一个传送请求，请等待对方操作！
+    discriminator-info-5: &6&l对方没有向你发送传送请求！
+    no-operation-info: &4&l对方一分钟内未操作，传送请求已销毁。
+    tp-reminder: &8&l一分钟内未操作将销毁传送请求
+    tptoggle-on: &f&l您已 &2&l开启 &f&l传送功能&r
+    tptoggle-on-description: &8&l当前状态下你可以使用传送，其他玩家也可以向你发起传送请求。
+    tptoggle-off: &f&l您已 &4&l关闭 &f&l传送功能&r
+    tptoggle-off-description: &8&l当前状态下你无法使用传送，其他玩家也无法向你发起传送请求。
+    tpa-executor-info: &a&l你向 &f&l%arg-1% &a&l发送了一个传送请求
+    tpa-receiver-info: &f&l%executor% &a&l想要传送到你的位置
+    tpahere-executor-info: &a&l你正在请求 &f&l%arg-1% &a&l传送到你的位置
+    tpahere-receiver-info: &f&l%executor% &a&l想要你传送到对方的位置
+    tpaccept-info: &2&l对方接受了你的传送请求
+    tping-move-error-info: &4&l检测到你已移动，传送取消！
+    tping-damage-error-info: &4&l检测到你受到伤害，传送取消！
+    tping-begin-info: &6&l传送即将开始，请勿移动！
+    tping-info-1: &f&l1
+    tping-info-2: &f&l2
+    tping-info-3: &f&l3
+    tping-info-4: &f&l4
+    tping-info-5: &f&l5
+    tping-end-info: &2&l你已经成功传送到 &f&l%executor% &2&l的位置
+    tpdeny-info: &4&l对方拒绝了你的传送请求
+
+command /tphelp:
+    trigger:
+        send "" to player
+        send "{@prefix} &6&lTusher-TPA 帮助菜单 ⛏" to player
+        send "" to player
+        send "{@prefix} &l/tphelp &7&l打开帮助菜单&f" to player
+        send "{@prefix} &l/tpa &7&l请求传送到玩家所在位置" to player
+        send "{@prefix} &l/tphere &7&l请求玩家传送到你的位置" to player
+        send "{@prefix} &l/tpaccept &7&l接受传送请求" to player
+        send "{@prefix} &l/tpdeny &7&l拒绝传送请求" to player
+        send "{@prefix} &l/tptoggle &7&l切换传送状态" to player
+        send "{@prefix} &l/tpt&8&loggle &7&l&l切换传送状态(快捷指令)" to player
+        send "" to player
+
+command /tptoggle:
+    aliases: /tpt		
+    trigger:
+        if {tpStatus::%executor%} is not set:
+            set {tpStatus::%executor%} to true
+            send "{@prefix} {@tptoggle-on}" to executor
+            send "{@prefix} {@tptoggle-on-description}" to executor
+        else:
+            delete {tpStatus::%executor%}
+            send "{@prefix} {@tptoggle-off}" to executor
+            send "{@prefix} {@tptoggle-off-description}" to executor
+
+command /tpa [<player>]:
+    trigger:
+        if arg-1 is set:
+            if arg-1 is not executor:
+                if {tpStatus::%arg-1's uuid%} and {tpStatus::%executor's uuid%} is not set:
+                    if {tpa::tp_%executor%_to_%arg-1%} and {tpahere::tp_%executor%_to_%arg-1%} is not set:
+                        set {tpa::tp_%executor%_to_%arg-1%} to true
+                        send "{@prefix} {@tpa-executor-info}" to executor
+                        send "" to arg-1
+                        send "{@prefix} {@tpa-receiver-info}" to arg-1
+                        send "{@prefix} {@tp-reminder}" to arg-1
+                        send formatted "{@prefix} <cmd:/tpaccept %executor%>&8&l[&2&l&n点击接受&r&7&l]<r> <cmd:/tpdeny %executor%> &8&l[&4&l&n点击拒绝&r&7&l]<reset>" to arg-1
+                        send "" to arg-1
+                        wait 60 seconds
+                        if {tpOperationStatus::tp_%executor%_to_%arg-1%} is not set:
+                            delete {tpa::tp_%executor%_to_%arg-1%}
+                            send "{@prefix} {@no-operation-info}" to executor
+                            delete {tpOperationStatus::tp_%executor%_to_%arg-1%}
+                    else:
+                        send "{@prefix} {@discriminator-info-4}" to executor
+                else:
+                    send "{@prefix} {@discriminator-info-3}" to executor
+            else:
+                send "{@prefix} {@discriminator-info-2}" to executor
+        else:
+            send "{@prefix} {@discriminator-info-1-tpa}" to executor
+
+command /tpahere [<player>]:
+    trigger:
+        if arg-1 is set:
+            if arg-1 is not executor:
+                if {tpStatus::%arg-1's uuid%} is not set:
+                    if {tpa::tp_%arg-1%_to_%executor%} and {tpahere::tp_%arg-1%_to_%executor%} is not set:
+                        set {tpahere::tp_%arg-1%_to_%executor%} to true
+                        send "{@prefix} {@tpahere-executor-info}" to executor
+                        send "" to arg-1
+                        send "{@prefix} {@tpahere-receiver-info}" to arg-1
+                        send "{@prefix} {@tp-reminder}" to arg-1
+                        send formatted "{@prefix} <cmd:/tpaccept %executor%>&8&l[&2&l&n点击接受&r&7&l]<r> <cmd:/tpdeny %executor%> &8&l[&4&l&n点击拒绝&r&7&l]<reset>" to arg-1
+                        send "" to arg-1
+                        wait 60 seconds
+                        if {tpOperationStatus::tp_%arg-1%_to_%executor%} is not set:
+                            delete {tpahere::tp_%arg-1%_to_%executor%}
+                            send "{@prefix} {@no-operation-info}" to executor
+                            delete {tpOperationStatus::tp_%arg-1%_to_%executor%}
+                    else:
+                        send "{@prefix} {@discriminator-info-4}" to executor
+                else:
+                    send "{@prefix} {@discriminator-info-3}" to executor
+            else:
+                send "{@prefix} {@discriminator-info-2}" to executor
+        else:
+            send "{@prefix} {@discriminator-info-1-tpahere}" to executor
+
+command /tpaccept [<player>]:
+    trigger:
+        if arg-1 is set:
+            if arg-1 is not executor:
+                if {tpa::tp_%executor%_to_%arg-1%} is not set:
+                    if {tpa::tp_%arg-1%_to_%executor%} is set:
+                        set {tpOperationStatus::tp_%arg-1%_to_%executor%} to "accept"
+                        set {tping::%arg-1%} to true
+                        delete {tpa::tp_%arg-1%_to_%executor%}
+                        send action bar "{@tpaccept-info}" to arg-1
+                        wait 1 second
+                        send subtitle "{@tping-begin-info}" to arg-1
+                        send title "{@tping-info-5}" to arg-1
+                        wait 1 second
+                        if {tping::%arg-1%} is set:
+                            send title "{@tping-info-4}" to arg-1
+                            wait 1 second
+                        if {tping::%arg-1%} is set:
+                            send title "{@tping-info-3}" to arg-1
+                            wait 1 second
+                        if {tping::%arg-1%} is set:
+                            send title "{@tping-info-2}" to arg-1
+                            wait 1 second
+                        if {tping::%arg-1%} is set:
+                            send title "{@tping-info-1}" to arg-1
+                            wait 1 second
+                        if {tping::%arg-1%} is set:
+                            send "{@prefix} {@tping-end-info}" to arg-1
+                            teleport arg-1 to executor
+                            delete {tping::%arg-1%}
+                    else if {tpahere::tp_%executor%_to_%arg-1%} is set:
+                        set {tpOperationStatus::tp_%executor%_to_%arg-1%} to "accept"
+                        set {tping::%executor%} to true
+                        delete {tpahere::tp_%executor%_to_%arg-1%}
+                        send action bar "{@tpaccept-info}" to arg-1
+                        wait 1 second
+                        send subtitle "{@tping-begin-info}" to arg-1
+                        send title "{@tping-info-5}" to arg-1
+                        wait 1 second
+                        if {tping::%executor%} is set:
+                            send title "{@tping-info-4}" to arg-1
+                            wait 1 second
+                        if {tping::%executor%} is set:
+                            send title "{@tping-info-3}" to arg-1
+                            wait 1 second
+                        if {tping::%executor%} is set:
+                            send title "{@tping-info-2}" to arg-1
+                            wait 1 second
+                        if {tping::%executor%} is set:
+                            send title "{@tping-info-1}" to arg-1
+                            wait 1 second
+                        if {tping::%executor%} is set:
+                            send "{@prefix} {@tping-end-info}" to arg-1
+                            teleport executor to arg-1
+                            delete {tping::%executor%}
+                    else:
+                        send "{@prefix} {@discriminator-info-5}" to executor
+            else:
+                send "{@prefix} {@discriminator-info-2}" to executor
+        else:
+            send "{@prefix} {@discriminator-info-1-tpaccept}" to executor
+
+on player move:
+    if {tping::%player%} is set:
+        delete {tping::%player%}
+        send action bar "{@tping-move-error-info}" to player
+
+on damage of player:
+    if {tping::%victim%} is set:
+        delete {tping::%victim%}
+        send action bar "{@tping-damage-error-info}" to victim
+
+command /tpdeny [<player>]:
+    trigger:
+        if arg-1 is set:
+            if arg-1 is not executor:
+                if {tpa::tp_%executor%_to_%arg-1%} is not set:
+                    if {tpa::tp_%arg-1%_to_%executor%} is set:
+                        set {tpOperationStatus::tp_%arg-1%_to_%executor%} to "deny"
+                        delete {tpa::tp_%arg-1%_to_%executor%}
+                        send "{@prefix} {@tpdeny-info}" to arg-1
+                    else if {tpahere::tp_%executor%_to_%arg-1%} is set:
+                        set {tpOperationStatus::tp_%executor%_to_%arg-1%} to "deny"
+                        delete {tpahere::tp_%executor%_to_%arg-1%}
+                        send "{@prefix} {@tpdeny-info}" to arg-1
+                    else:
+                        send "{@prefix} {@discriminator-info-5}" to executor
+            else:
+                send "{@prefix} {@discriminator-info-2}" to executor
+        else:
+            send "{@prefix} {@discriminator-info-1-tpaccept}" to executor
