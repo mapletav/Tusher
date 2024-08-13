@@ -43,12 +43,9 @@ Tusher-[script name]_v.[version]_[language code].sk
 The license agreement for all source codes in this repository is based on `Apache License 2.0`. The use of any source code from this repository implies that you explicitly agree to be bound by Apache License 2.0. Under the framework of this agreement, the source code can be freely used, modified and distributed. However, you must strictly follow the terms of this agreement. Before using, please be sure to use and handle the source code of this repository carefully to ensure that your actions are fully in line with legal and ethical norms.
 <br>
 <br>I reserve the right to modify this statement and license agreement when necessary and will notify users in advance. I will not be liable for any direct, indirect, incidental, special, exemplary or consequential damages resulting from the use of the source code of this repository.
-### Original copyright, license and disclaimer
-```
-Copyright:
+### Copyright
 The copyright of this work (including but not limited to source code, documents, images, designs, etc.) belongs to Mapletav.
-License:
+### License
 This work is licensed under the Apache License 2.0. Under the terms and conditions of this license, you have the right to use, modify and distribute this work.
-Disclaimer:
+### Disclaimer
 This work is provided for reference and learning purposes only. Mapletav does not assume any liability for any direct, indirect, incidental, special, consequential or punitive damages resulting from the use of this work, including but not limited to data loss, business interruption, computer failure or any other losses. The risk of using this work is borne by you.
-```
